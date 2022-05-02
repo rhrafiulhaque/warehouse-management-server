@@ -82,6 +82,15 @@ const run= async()=>{
             res.send(result);
         })
 
+        // Product Collection By Email 
+        app.get('/myitem',async(req,res)=>{
+            const email = req.query.email;
+            const query ={email:email};
+            const cursor = productCollection.find(query);
+            const myitem = await cursor.toArray();
+            res.send(myitem);
+        })
+
 
     }
     finally{
