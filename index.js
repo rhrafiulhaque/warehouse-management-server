@@ -11,6 +11,17 @@ app.use(cors());
 app.use(express.json());
 
 
+// Verify JWT 
+function verifyJWT(req,res,next){
+    const authHeader = req.headers.authorization;
+    if(!authHeader){
+        return res.status(401).send({message:'Unauthorized Access By Someone'});
+    }
+    next();
+}
+
+
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vpofv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
@@ -18,11 +29,21 @@ const run= async()=>{
     try {
         await client.connect();
         const productCollection = client.db('electroMart').collection('products');
+        const reviewCollection = client.db('electroMart').collection('review');
 
         // All Product 
         app.get('/products', async(req,res)=>{
             const query={};
         const cursor = productCollection.find(query);
+        const products = await cursor.toArray();
+        res.send(products);
+        });
+
+
+        // All Review 
+        app.get('/review', async(req,res)=>{
+        const query={};
+        const cursor = reviewCollection.find(query);
         const products = await cursor.toArray();
         res.send(products);
         });
@@ -84,7 +105,8 @@ const run= async()=>{
         })
 
         // Product Collection By Email 
-        app.get('/myitem',async(req,res)=>{
+        app.get('/myitem', verifyJWT, async(req,res)=>{
+            
             const email = req.query.email;
             const query ={email:email};
             const cursor = productCollection.find(query);
